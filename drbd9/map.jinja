@@ -1,0 +1,28 @@
+# -*- coding: utf-8 -*-
+# vim: ft=yaml
+
+{%- load_yaml as drbd9_os_family %}
+
+
+base:
+  pkgs:
+    - "drbd"
+    - "kmod-drbd"
+  service:
+    name: "drbd"
+    state: "running"
+    enable: "True"
+  conffile: '/etc/drbd.d/global_common.conf'
+
+default:
+  sysconfdir: /etc/sysconfig
+
+Debian:
+  sysconfdir: /etc/default
+
+RedHat:
+  sysconfdir: /etc/sysconfig
+{%- endload %}
+
+{%- set drbd9_default_plus_pillar_lookup = salt['grains.filter_by'](drbd9_os_family, grain='os_family', merge=salt['pillar.get']('drbd9:lookup'), default='default', base='base') %}
+{%- set drbd9 = salt['pillar.get']('drbd9', default=drbd9_default_plus_pillar_lookup, merge=True) %}
