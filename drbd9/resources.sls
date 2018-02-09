@@ -57,11 +57,22 @@ drbd9_resources__{{ resource }}_resfile:
 
 
   {% for volume, volume_data in resource_data.volumes.items()|sort %}
+    {% set init_done = salt['grains.get']('drbd9:resources:' + resource|string + ':' + volume|string + ':init', False) %}
+# resource={{resource}}, volume={{volume}}, init_done={{ init_done }}
+    {% if not init_done %}
+
 drbd9_resources__{{ resource }}_{{ volume }}_create_md:
   cmd.run:
     - name: drbdadm --verbose -- --force create-md {{ resource }}/{{ volume }}
     - unless: drbdadm --verbose -- dstate {{ resource }}/{{ volume }}
     #- require:
     #  - FIXME
+
+    {% endif %}
   {% endfor %}
 {% endfor %}
+
+drbd9_resources__empty_sls_prevent_error:
+  cmd.run:
+    - name: true
+    - unless: true

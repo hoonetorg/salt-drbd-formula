@@ -5,6 +5,16 @@
 # node_ids: {{node_ids|json}}
 # admin_node_id: {{admin_node_id}}
 
+
+drbd9_orchestration__clean_cache:
+  cmd.run:
+    - name: |
+
+        salt-run cache.clear_all tgt='*' && \
+        salt '*' saltutil.sync_all && \
+        echo
+        #rm /var/cache/salt/master/minions/*/*
+
 drbd9_orchestration__install:
   salt.state:
     - tgt: {{node_ids|json}}
@@ -37,7 +47,8 @@ drbd9_orchestration__resources_up:
 
 drbd9_orchestration__resources_init:
   salt.state:
-    - tgt: {{admin_node_id}}
+    - tgt: {{node_ids|json}}
+    - tgt_type: list
     - expect_minions: True
     - saltenv: {{saltenv}}
     - sls: drbd9.resources_init
