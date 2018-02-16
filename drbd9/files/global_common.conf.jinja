@@ -1,25 +1,64 @@
+{%- from "drbd9/map.jinja" import drbd9 with context %}
 # Managed by salt - do not edit
 
 global {
-  usage-count no;
-  udev-always-use-vnr; 
+{%- for key, value in drbd9.get('conf', {}).get('global_common', {}).get('global', {}).items()|sort %}
+  {%- if value not in [ '' ] %}
+  {{ key }} {{ value }};
+  {%- else %}
+  {{ key }};
+  {%- endif %}
+{%- endfor %}
 }
 
 common {
   handlers {
+{%- for key, value in drbd9.get('conf', {}).get('global_common', {}).get('common', {}).get('handlers', {}).items()|sort %}
+  {%- if value not in [ '' ] %}
+    {{ key }} {{ value }};
+  {%- else %}
+    {{ key }};
+  {%- endif %}
+{%- endfor %}
   }
 
   startup {
+{%- for key, value in drbd9.get('conf', {}).get('global_common', {}).get('common', {}).get('startup', {}).items()|sort %}
+  {%- if value not in [ '' ] %}
+    {{ key }} {{ value }};
+  {%- else %}
+    {{ key }};
+  {%- endif %}
+{%- endfor %}
   }
 
   options {
-    quorum majority;
+{%- for key, value in drbd9.get('conf', {}).get('global_common', {}).get('common', {}).get('options', {}).items()|sort %}
+  {%- if value not in [ '' ] %}
+    {{ key }} {{ value }};
+  {%- else %}
+    {{ key }};
+  {%- endif %}
+{%- endfor %}
   }
 
   disk {
+{%- for key, value in drbd9.get('conf', {}).get('global_common', {}).get('common', {}).get('disk', {}).items()|sort %}
+  {%- if value not in [ '' ] %}
+    {{ key }} {{ value }};
+  {%- else %}
+    {{ key }};
+  {%- endif %}
+{%- endfor %}
   }
 
   net {
-    csums-alg sha1;
+{%- for key, value in drbd9.get('conf', {}).get('global_common', {}).get('common', {}).get('net', {}).items()|sort %}
+  {%- if value not in [ '' ] %}
+    {{ key }} {{ value }};
+  {%- else %}
+    {{ key }};
+  {%- endif %}
+{%- endfor %}
   }
 }

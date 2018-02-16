@@ -13,6 +13,25 @@ base:
     state: "enabled"
     #enable: "True"
   conffile: '/etc/drbd.d/global_common.conf'
+  conf:
+    global_common:
+      global:
+        usage-count: 'no'
+        udev-always-use-vnr: ''
+
+      common:
+        #handlers:
+
+        #startup:
+
+        options:
+          quorum: 'majority'
+
+        #disk:
+
+        net:
+          csums-alg: 'sha1'
+
 
 default:
   sysconfdir: /etc/sysconfig
