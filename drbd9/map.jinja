@@ -10,8 +10,8 @@ base:
     - "kmod-drbd"
   service:
     name: "drbd"
-    state: "running"
-    enable: "True"
+    state: "enabled"
+    #enable: "True"
   conffile: '/etc/drbd.d/global_common.conf'
 
 default:
