@@ -3,7 +3,7 @@
 
 {% from "drbd9/map.jinja" import drbd9 with context %}
 
-{% set node_ids = salt['pillar.get']('drbd9:nodes').keys()|sort %}
+{% set node_ids = drbd9.nodes.keys()|sort %}
 {% set admin_node_id = node_ids[0] %}
 {% set my_id = grains['id'] %}
 # node_ids: {{node_ids}}
@@ -22,8 +22,6 @@ drbd9_resources_init__{{ resource }}_{{ volume }}_new_current_uuid:
   cmd.run:
     - name: drbdadm --verbose -- --clear-bitmap new-current-uuid  {{ resource }}/{{ volume }}
     - unless: drbdadm -- get-gi {{ resource }}/{{ volume }} |grep -w -v '000000000000000[0-9]:0000000000000000:0000000000000000:0000000000000000:0:0:0:0:0:0:0:1:1:0:0:1'
-    #- require:
-    #  - FIXME
 
 drbd9_resources_init__{{ resource }}_{{ volume }}_set_grain_successful:
   grains.present:

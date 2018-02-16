@@ -2,7 +2,7 @@
 # vim: ft=sls
 
 {% from "drbd9/map.jinja" import drbd9 with context %}
-{% set node_ids = salt['pillar.get']('drbd9:nodes').keys()|sort %}
+{% set node_ids = drbd9.nodes.keys()|sort %}
 {% set admin_node_id = node_ids[0] %}
 {% set my_id = grains['id'] %}
 # node_ids: {{node_ids}}
@@ -30,8 +30,6 @@ drbd9_resources_up__{{ resource }}_up:
   cmd.run:
     - name: drbdadm --verbose -- up {{ resource }}
     - unless: drbdadm --verbose -- cstate {{ resource }}
-    #- require:
-    #  - FIXME
 
     {% if my_id not in [ admin_node_id ] %}
       {% for volume, volume_data in resource_data.volumes.items()|sort %}

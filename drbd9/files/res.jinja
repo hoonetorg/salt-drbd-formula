@@ -1,13 +1,19 @@
 {%- from "drbd9/map.jinja" import drbd9 with context %}
 # Managed by salt - do not edit
 resource {{resource}} {
-    net {
-        cram-hmac-alg       {{ resource_data.get('net_options', {}).get('cram_hmac_alg', 'sha256') }};
-        shared-secret       "{{ resource_data.get('net_options', {}).get('shared_secret', 'hoonetorg') }}";
-        allow-two-primaries {{ resource_data.get('net_options', {}).get('allow_two_primaries', 'no') }};
-    }
+  net {
+    cram-hmac-alg       {{ resource_data.get('net_options', {}).get('cram_hmac_alg', 'sha256') }}; #FIXME sha1 makes drbd faster?
+    shared-secret       "{{ resource_data.get('net_options', {}).get('shared_secret', 'hoonetorg') }}"; 
+    allow-two-primaries {{ resource_data.get('net_options', {}).get('allow_two_primaries', 'no') }};
+  }
+  {%- for node, node_data in resource_data.get('nodes', {}).items()|sort %}
+  on {{ node }} {
+    node-id     {{ node_data.get('id') }};
+    address     ipv4 {{ node_data.get('ipv4') }}:{{ resource_data.get('port') }};
     {%- for volume, volume_data in resource_data.volumes.items()|sort %}
-      {%- if drbd9.resource_type in [ 'zvol' ] %}
+      {%- if node_data.get('diskless', False) %}
+        {%- set disk = 'none' %}
+      {%- elif drbd9.resource_type in [ 'zvol' ] %}
         {%- set disk =  '/dev/zvol/' + drbd9.resource_pool + '/' + resource + '_' + volume  %}
       {%- else %}
         {%- set disk = None %}
@@ -20,21 +26,19 @@ resource {{resource}} {
         {%- endif %}
       {%- endif %}
     volume {{ volume }} {
-        device      minor {{ volume_data.get('minor') }};
-        disk        {{ disk }};
-        meta-disk   {{ meta_disk|default('internal') }};
+      device      minor {{ volume_data.get('minor') }};
+      disk        {{ disk }};
+      {%- if not node_data.get('diskless', False) %}
+      meta-disk   {{ meta_disk|default('internal') }};
+      {%- endif %}
     }
     {%- endfor %}
-    {%- for node, node_data in nodes.items()|sort %}
-    on {{ node }} {
-        node-id     {{ node_data.get('id') }};
-        address     ipv4 {{ node_data.get('ipv4') }}:{{ resource_data.get('port') }};
+  }
+  {%- endfor %}
+  connection-mesh {
+    hosts {{ resource_data.get('nodes', {}).keys()|join(' ') }};
+    net {
+      protocol {{ resource_data.get('net_options', {}).get('protocol', 'C') }};
     }
-    {%- endfor %}
-    connection-mesh {
-        hosts {{ nodes.keys()|join(' ') }};
-        net {
-            protocol {{ resource_data.get('net_options', {}).get('protocol', 'C') }};
-        }
-    }
+  }
 }
