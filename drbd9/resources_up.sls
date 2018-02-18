@@ -21,6 +21,13 @@
     {% if not init_done %}
       {% do resource_up.update( { 'bring_up': True } ) %}
     {% endif %}
+    {% if volume_data.get('fstype', False) %}
+      {% set initfs_done = salt['grains.get']('drbd9:resources:' + resource|string + ':' + volume|string + ':initfs', False) %}
+# resource={{resource}}, volume={{volume}}, initfs_done={{ initfs_done }}
+      {% if not initfs_done %}
+        {% do resource_up.update( { 'bring_up': True } ) %}
+      {% endif %}
+    {% endif %}
   {% endfor %}
 
 #resource_up: {{ resource_up }}
@@ -33,14 +40,31 @@ drbd9_resources_up__{{ resource }}_up:
 
     {% if my_id not in [ admin_node_id ] %}
       {% for volume, volume_data in resource_data.volumes.items()|sort %}
+        {% set init_done = salt['grains.get']('drbd9:resources:' + resource|string + ':' + volume|string + ':init', False) %}
+        {% if not init_done %}
 drbd9_resources_up__{{ resource }}_{{ volume }}_set_grain_successful:
   grains.present:
     - name: drbd9:resources:{{ resource }}:{{ volume }}:init
     - value: True
     - require:
       - cmd: drbd9_resources_up__{{ resource }}_up
+        {% endif %}
+
+        {% if volume_data.get('fstype', False) %}
+          {% set initfs_done = salt['grains.get']('drbd9:resources:' + resource|string + ':' + volume|string + ':initfs', False) %}
+          {% if not initfs_done %}
+drbd9_resources_up__{{ resource }}_{{ volume }}_set_grain_fs_successful:
+  grains.present:
+    - name: drbd9:resources:{{ resource }}:{{ volume }}:initfs
+    - value: True
+    - require:
+      - cmd: drbd9_resources_up__{{ resource }}_up
+          {% endif %}
+        {% endif %}
+
       {% endfor %}
     {% endif %}
+
   {% endif %}
 
 {% endfor %}

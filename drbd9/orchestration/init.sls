@@ -84,3 +84,13 @@ drbd9_orchestration__resources_init:
     - expect_minions: True
     - saltenv: {{saltenv}}
     - sls: drbd9.resources_init
+    - require_in:
+      - salt: drbd9_orchestration__resources_fs
+
+drbd9_orchestration__resources_fs:
+  salt.state:
+    - tgt: {{node_ids_disk|json}}
+    - tgt_type: list
+    - expect_minions: True
+    - saltenv: {{saltenv}}
+    - sls: drbd9.resources_fs
