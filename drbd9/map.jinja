@@ -12,8 +12,30 @@ base:
     name: "drbd"
     state: "enabled"
     #enable: "True"
+  sysctl_dir: '/etc/sysctl.d'
+  sysctl_file: 'drbd.conf'
   conffile: '/etc/drbd.d/global_common.conf'
   conf:
+    sysctl:
+
+      net.core.rmem_max: '20971520'
+      net.core.rmem_default: '20971520'
+      net.core.wmem_max: '20971520'
+      net.core.wmem_default: '20971520'
+      net.core.optmem_max: '20971520'
+
+      net.ipv4.tcp_rmem: '2097152 20971520 20971520'
+      net.ipv4.tcp_wmem: '2097152 20971520 20971520'
+      net.ipv4.tcp_mem: '2097152 20971520 20971520'
+      net.ipv4.udp_mem: '2097152 20971520 20971520'
+
+      net.core.netdev_max_backlog: '300000'
+      net.ipv4.tcp_timestamps: '0'
+      net.ipv4.tcp_sack: '0'
+      net.ipv4.tcp_no_metrics_save: '1'
+      ### FIXME is default, does it hurt?
+      #net.ipv4.tcp_window_scaling: '1'
+
     global_common:
       global:
         usage-count: 'no'
@@ -27,10 +49,18 @@ base:
         options:
           quorum: 'majority'
 
-        #disk:
+        disk:
+          al-extents: '6007'
 
         net:
           csums-alg: 'sha1'
+
+          max-buffers: '1024'
+          max-epoch-size: '160'
+
+          sndbuf-size: '2048k'
+          rcvbuf-size: '2048k'
+
 
 
 default:
