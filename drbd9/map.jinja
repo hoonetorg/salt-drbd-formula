@@ -16,25 +16,27 @@ base:
   sysctl_file: 'drbd.conf'
   conffile: '/etc/drbd.d/global_common.conf'
   conf:
-    sysctl:
-
-      net.core.rmem_max: '20971520'
-      net.core.rmem_default: '20971520'
-      net.core.wmem_max: '20971520'
-      net.core.wmem_default: '20971520'
-      net.core.optmem_max: '20971520'
-
-      net.ipv4.tcp_rmem: '2097152 20971520 20971520'
-      net.ipv4.tcp_wmem: '2097152 20971520 20971520'
-      net.ipv4.tcp_mem: '2097152 20971520 20971520'
-      net.ipv4.udp_mem: '2097152 20971520 20971520'
-
-      net.core.netdev_max_backlog: '300000'
-      net.ipv4.tcp_timestamps: '0'
-      net.ipv4.tcp_sack: '0'
-      net.ipv4.tcp_no_metrics_save: '1'
-      ### FIXME is default, does it hurt?
-      #net.ipv4.tcp_window_scaling: '1'
+    # these make problems (f.e. thousands of messges like: "Ignoring P_TWOPC_ABORT packet 2181828253")
+    # FIXME find the cause ^^^
+    #sysctl:
+    #
+    #  net.core.rmem_max: '20971520'
+    #  net.core.rmem_default: '20971520'
+    #  net.core.wmem_max: '20971520'
+    #  net.core.wmem_default: '20971520'
+    #  net.core.optmem_max: '20971520'
+    #
+    #  net.ipv4.tcp_rmem: '2097152 20971520 20971520'
+    #  net.ipv4.tcp_wmem: '2097152 20971520 20971520'
+    #  net.ipv4.tcp_mem: '2097152 20971520 20971520'
+    #  net.ipv4.udp_mem: '2097152 20971520 20971520'
+    #
+    #  net.core.netdev_max_backlog: '300000'
+    #  net.ipv4.tcp_timestamps: '0'
+    #  net.ipv4.tcp_sack: '0'
+    #  net.ipv4.tcp_no_metrics_save: '1'
+    #  ### FIXME is default, does it hurt?
+    #  #net.ipv4.tcp_window_scaling: '1'
 
     global_common:
       global:
