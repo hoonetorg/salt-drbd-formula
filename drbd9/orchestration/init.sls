@@ -94,3 +94,12 @@ drbd9_orchestration__resources_fs:
     - expect_minions: True
     - saltenv: {{saltenv}}
     - sls: drbd9.resources_fs
+    - require_in:
+      - salt: drbd9_orchestration__pcs
+
+drbd9_orchestration__pcs:
+  salt.state:
+    - tgt: {{admin_node_id}}
+    - expect_minions: True
+    - saltenv: {{saltenv}}
+    - sls: drbd9.pcs
