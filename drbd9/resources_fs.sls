@@ -21,11 +21,56 @@
 
 drbd9_resources_fs__{{ resource }}_{{ volume }}_create_fs:
   cmd.run:
-    - name: blkid -c /dev/null -o value -s TYPE /dev/drbd/by-res/{{ resource }}/{{ volume }} || mkfs.{{volume_data.fstype}} {% if volume_data.mkfsopts is defined and volume_data.mkfsopts %} {{volume_data.mkfsopts}} {% endif %} /dev/drbd/by-res/{{ resource }}/{{ volume }} && sync && udevadm settle && blkid -c /dev/null -o value -s TYPE /dev/drbd/by-res/{{ resource }}/{{ volume }} | grep {{volume_data.fstype}}
-    - onlyif: test -b /dev/drbd/by-res/{{ resource }}/{{ volume }} && test -w /dev/drbd/by-res/{{ resource }}/{{ volume }} && drbdadm role {{ resource }}|grep Secondary
-    - unless: '! dd if=/dev/drbd/by-res/{{ resource }}/{{ volume }} of=/dev/null bs=1 count=1 ||  blkid -c /dev/null -o value -s TYPE /dev/drbd/by-res/{{ resource }}/{{ volume }}|grep {{volume_data.fstype}}'
+    - name: blkid -c /dev/null -o value -s TYPE /dev/drbd/by-res/{{ resource }}/{{ volume }} || mkfs.{{volume_data.fstype}} {% if volume_data.mkfsopts is defined and volume_data.mkfsopts %} {{volume_data.mkfsopts}} {% endif %} /dev/drbd/by-res/{{ resource }}/{{ volume }} && sync && udevadm settle && blkid -c /dev/null -o value -s TYPE /dev/drbd/by-res/{{ resource }}/{{ volume }} | grep -w {{volume_data.fstype}}
+    - onlyif: test -b /dev/drbd/by-res/{{ resource }}/{{ volume }} && test -w /dev/drbd/by-res/{{ resource }}/{{ volume }} && drbdadm role {{ resource }}|grep -w Secondary
+    - unless: '! dd if=/dev/drbd/by-res/{{ resource }}/{{ volume }} of=/dev/null bs=1 count=1 ||  blkid -c /dev/null -o value -s TYPE /dev/drbd/by-res/{{ resource }}/{{ volume }}|grep -w {{volume_data.fstype}}'
     - require_in:
       - grains: drbd9_resources_fs__{{ resource }}_{{ volume }}_set_grain_successful
+
+          {% if volume_data.get('directories', False) %}
+drbd9_resources_fs__{{ resource }}_{{ volume }}_mount:
+  mount.mounted:
+    - name: /tmp{{ volume_data.get('mountpoint') }}
+    - device: /dev/drbd/by-res/{{ resource }}/{{ volume }}
+    - fstype: {{ volume_data.get('fstype') }}
+    - opts: {% if volume_data.get('mountopts', False) %} {{volume_data.mountopts}} {% else %} rw,defaults {% endif %}
+    - mkmnt: True
+    - persist: False
+    - match_on:
+      - name
+      - device
+    - onlyif: test -b /dev/drbd/by-res/{{ resource }}/{{ volume }} && test -w /dev/drbd/by-res/{{ resource }}/{{ volume }} && drbdadm role {{ resource }}|grep -w Secondary && dd if=/dev/drbd/by-res/{{ resource }}/{{ volume }} of=/dev/null bs=1 count=1 && test -z "`(mount |grep -w /dev/drbd/by-res/{{ resource }}/{{ volume }} || mount |grep -w $(drbdadm sh-dev {{ resource }}/{{ volume }}) )`"
+    - require:
+      - cmd: drbd9_resources_fs__{{ resource }}_{{ volume }}_create_fs
+    - require_in:
+      - grains: drbd9_resources_fs__{{ resource }}_{{ volume }}_set_grain_successful
+
+            {% for directory, directory_data in volume_data.get('directories').items()|sort %}
+drbd9_resources_fs__{{ resource }}_{{ volume }}_mkdirs_{{ directory }}:
+  file.directory:
+    - name: /tmp{{ volume_data.get('mountpoint') }}/{{ directory }}
+    - user: {{ directory_data.get('user', 'root') }}
+    - group: {{ directory_data.get('group', 'root') }}
+    - mode: {{ directory_data.get('mode', '"0755"') }}
+    - makedirs: True
+    - onlyif: dd if=/dev/drbd/by-res/{{ resource }}/{{ volume }} of=/dev/null bs=1 count=1 && (mount |grep -w /dev/drbd/by-res/{{ resource }}/{{ volume }} || mount |grep -w `drbdadm sh-dev {{ resource }}/{{ volume }}`)|grep -w /tmp{{ volume_data.get('mountpoint') }}
+    - require:
+      - mount: drbd9_resources_fs__{{ resource }}_{{ volume }}_mount
+    - require_in:
+      - mount: drbd9_resources_fs__{{ resource }}_{{ volume }}_umount
+      - grains: drbd9_resources_fs__{{ resource }}_{{ volume }}_set_grain_successful
+            {% endfor %}
+
+drbd9_resources_fs__{{ resource }}_{{ volume }}_umount:
+  mount.unmounted:
+    - name: /tmp{{ volume_data.get('mountpoint') }}
+    - persist: False
+    - require:
+      - cmd: drbd9_resources_fs__{{ resource }}_{{ volume }}_create_fs
+      - mount: drbd9_resources_fs__{{ resource }}_{{ volume }}_mount
+    - require_in:
+      - grains: drbd9_resources_fs__{{ resource }}_{{ volume }}_set_grain_successful
+          {% endif %}
 
 drbd9_resources_fs__{{ resource }}_{{ volume }}_set_grain_successful:
   grains.present:
