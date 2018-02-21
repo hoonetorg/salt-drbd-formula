@@ -3,7 +3,7 @@
 
 {% from "drbd9/map.jinja" import drbd9 with context %}
 
-{% for key, value in drbd9.conf.sysctl.items()|sort %}
+{% for key, value in drbd9.get('conf', {}).get('sysctl', {}).items()|sort %}
 drbd9_config__sysctl_{{ key }}:
   sysctl.present:
     - name: '{{ key }}'
