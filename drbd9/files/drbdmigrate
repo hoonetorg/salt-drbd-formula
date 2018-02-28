@@ -1,4 +1,8 @@
 #!/bin/bash
+#  FIXME: howto abort migrate (should work with ctrl-c)
+#  according to: https://www.redhat.com/archives/libvirt-users/2014-January/msg00009.html
+#  virsh qemu-monitor-command ${name} --pretty '{"execute":"migrate_cancel"}'a is unsupported in favour of 
+#  pressing ctrl-C during 'virsh migrate') is to call virDomainAbortJob()
 VM=$1
 DESTHOST=$2
 
