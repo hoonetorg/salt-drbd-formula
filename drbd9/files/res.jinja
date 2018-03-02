@@ -21,9 +21,9 @@ resource {{resource}} {
       {%- if volume_data.get('meta_disk', False) %}
         {%- if drbd9.resource_type_meta in [ 'lvm' ] %}
           {%- set meta_disk = '/dev/' + drbd9.resource_pool_meta + '/' + resource + '_' + volume + '_meta' %}
-        {%- else %}
-          {%- set meta_disk = None %}
         {%- endif %}
+      {%- else %}
+        {%- set meta_disk = None %}
       {%- endif %}
     volume {{ volume }} {
       device      minor {{ volume_data.get('minor') }};
