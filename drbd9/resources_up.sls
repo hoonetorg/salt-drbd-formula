@@ -36,7 +36,12 @@
 drbd9_resources_up__{{ resource }}_up:
   cmd.run:
     - name: drbdadm --verbose -- up {{ resource }}
-    - unless: drbdadm --verbose -- cstate {{ resource }}
+    - unless: drbdadm --verbose -- cstate {{ resource }} 
+
+drbd9_resources_up__{{ resource }}_adjust:
+  cmd.run:
+    - name: drbdadm --verbose -- adjust {{ resource }}
+    - onlyif: test -n "`drbdadm -d --verbose -- adjust  {{ resource }}`"
 
     {% if my_id not in [ admin_node_id ] %}
       {% for volume, volume_data in resource_data.volumes.items()|sort %}
@@ -48,6 +53,7 @@ drbd9_resources_up__{{ resource }}_{{ volume }}_set_grain_successful:
     - value: True
     - require:
       - cmd: drbd9_resources_up__{{ resource }}_up
+      - cmd: drbd9_resources_up__{{ resource }}_adjust
         {% endif %}
 
         {% if volume_data.get('fstype', False) %}
@@ -59,6 +65,7 @@ drbd9_resources_up__{{ resource }}_{{ volume }}_set_grain_fs_successful:
     - value: True
     - require:
       - cmd: drbd9_resources_up__{{ resource }}_up
+      - cmd: drbd9_resources_up__{{ resource }}_adjust
           {% endif %}
         {% endif %}
 
