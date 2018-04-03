@@ -13,7 +13,7 @@ extend:
         - pkg: drbd9_install__pkg
   drbd9_service__service:
     service:
-      - watch:
+      - require:
         - file: drbd9_config__conffile
       - require:
         - pkg: drbd9_install__pkg

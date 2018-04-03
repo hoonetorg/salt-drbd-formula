@@ -15,7 +15,10 @@ echo "$VM is running here"
 DRBDMANAGERESs="`virsh domblklist $VM |grep /dev/drbd/by-res/| perl -pe 's;^.*/dev/drbd/by-res/(.*)/[0-9]+\s*$;$1\n;g'|sort -u`"
 
 for DRBDMANAGERES in $DRBDMANAGERESs; do
-  drbdadm net-options --allow-two-primaries=yes $DRBDMANAGERES || exit 1
+  for DRBDHOST in `cat /etc/drbd.d/${DRBDMANAGERES}.res |grep hosts|perl -pe 's/^\s*hosts\s+//g;s/\;$//g'`; do 
+    echo "${DRBDHOST}:"
+    ssh -n $DRBDHOST drbdadm net-options --allow-two-primaries=yes $DRBDMANAGERES || exit 1
+  done
   echo "allow two primaries is set for disk $DRBDMANAGERES"
 done
 echo "allow two primaries is set for disks: $DRBDMANAGERESs"
@@ -23,7 +26,11 @@ echo "allow two primaries is set for disks: $DRBDMANAGERESs"
 virsh migrate $VM qemu+ssh://$DESTHOST/system --live --p2p --undefinesource --verbose --compressed --auto-converge
 
 for DRBDMANAGERES in $DRBDMANAGERESs; do
-  drbdadm net-options --allow-two-primaries=no $DRBDMANAGERES || exit 1
+  for DRBDHOST in `cat /etc/drbd.d/${DRBDMANAGERES}.res |grep hosts|perl -pe 's/^\s*hosts\s+//g;s/\;$//g'`; do 
+    echo "${DRBDHOST}:"
+    #ssh -n $DRBDHOST drbdadm net-options --allow-two-primaries=no $DRBDMANAGERES || exit 1
+    ssh -n $DRBDHOST drbdadm adjust $DRBDMANAGERES || exit 1
+  done
   echo "allow two primaries is unset for disk $DRBDMANAGERES"
 done
 echo "allow two primaries is unset for disks: $DRBDMANAGERESs"
