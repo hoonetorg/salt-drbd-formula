@@ -1,8 +1,8 @@
-{%- from "drbd9/map.jinja" import drbd9 with context %}
+{%- from "drbd/map.jinja" import drbd with context %}
 # Managed by salt - do not edit
 
 global {
-{%- for key, value in drbd9.get('conf', {}).get('global_common', {}).get('global', {}).items()|sort %}
+{%- for key, value in drbd.get('conf', {}).get('global_common', {}).get('global', {}).items()|sort %}
   {%- if value not in [ '' ] %}
   {{ key }} {{ value }};
   {%- else %}
@@ -13,7 +13,7 @@ global {
 
 common {
   handlers {
-{%- for key, value in drbd9.get('conf', {}).get('global_common', {}).get('common', {}).get('handlers', {}).items()|sort %}
+{%- for key, value in drbd.get('conf', {}).get('global_common', {}).get('common', {}).get('handlers', {}).items()|sort %}
   {%- if value not in [ '' ] %}
     {{ key }} {{ value }};
   {%- else %}
@@ -23,7 +23,7 @@ common {
   }
 
   startup {
-{%- for key, value in drbd9.get('conf', {}).get('global_common', {}).get('common', {}).get('startup', {}).items()|sort %}
+{%- for key, value in drbd.get('conf', {}).get('global_common', {}).get('common', {}).get('startup', {}).items()|sort %}
   {%- if value not in [ '' ] %}
     {{ key }} {{ value }};
   {%- else %}
@@ -33,7 +33,7 @@ common {
   }
 
   options {
-{%- for key, value in drbd9.get('conf', {}).get('global_common', {}).get('common', {}).get('options', {}).items()|sort %}
+{%- for key, value in drbd.get('conf', {}).get('global_common', {}).get('common', {}).get('options', {}).items()|sort %}
   {%- if value not in [ '' ] %}
     {{ key }} {{ value }};
   {%- else %}
@@ -43,7 +43,7 @@ common {
   }
 
   disk {
-{%- for key, value in drbd9.get('conf', {}).get('global_common', {}).get('common', {}).get('disk', {}).items()|sort %}
+{%- for key, value in drbd.get('conf', {}).get('global_common', {}).get('common', {}).get('disk', {}).items()|sort %}
   {%- if value not in [ '' ] %}
     {{ key }} {{ value }};
   {%- else %}
@@ -53,7 +53,7 @@ common {
   }
 
   net {
-{%- for key, value in drbd9.get('conf', {}).get('global_common', {}).get('common', {}).get('net', {}).items()|sort %}
+{%- for key, value in drbd.get('conf', {}).get('global_common', {}).get('common', {}).get('net', {}).items()|sort %}
   {%- if value not in [ '' ] %}
     {{ key }} {{ value }};
   {%- else %}

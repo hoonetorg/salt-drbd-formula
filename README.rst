@@ -1,12 +1,12 @@
-==================
-salt-drbd9-formula
-==================
+=================
+salt-drbd-formula
+=================
 
-A saltstack formula for drbd9
+A saltstack formula for drbd
 
 .. note::
 
-    install and configure drbd9
+    install and configure drbd
 
 Available states
 ================
@@ -14,7 +14,7 @@ Available states
 .. contents::
     :local:
 
-``drbd9``
+``drbd``
 ------------
 
-Installs the drbd9 package, and starts the associated drbd9 service.
+Installs the drbd package, and starts the associated drbd service.

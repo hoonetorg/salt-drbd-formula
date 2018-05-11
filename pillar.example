@@ -1,4 +1,4 @@
-drbd9:
+drbd:
   lookup:
     pkgs:
-      - drbd9
+      - drbd

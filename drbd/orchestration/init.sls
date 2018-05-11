@@ -1,9 +1,9 @@
 #!jinja|yaml
-{%- set node_ids = salt['pillar.get']('drbd9:nodes').keys() -%}
+{%- set node_ids = salt['pillar.get']('drbd:nodes').keys() -%}
 {%- set admin_node_id = node_ids[0] -%}
 {%- set node_ids_disk = [] -%}
 {%- set node_ids_diskless = [] -%}
-{%- for node, node_data in salt['pillar.get']('drbd9:nodes').items() -%}
+{%- for node, node_data in salt['pillar.get']('drbd:nodes').items() -%}
   {%- if node_data.get('diskless', False) -%}
     {%- do node_ids_diskless.append(node) -%} 
   {%- else -%}
@@ -18,7 +18,7 @@
 # node_ids_diskless: {{node_ids_diskless|json}}
 
 
-drbd9_orchestration__clean_cache:
+drbd_orchestration__clean_cache:
   cmd.run:
     - name: |
 
@@ -27,79 +27,79 @@ drbd9_orchestration__clean_cache:
         echo
         #rm /var/cache/salt/master/minions/*/*
 
-drbd9_orchestration__install:
+drbd_orchestration__install:
   salt.state:
     - tgt: {{node_ids|json}}
     - tgt_type: list
     - expect_minions: True
     - saltenv: {{saltenv}}
-    - sls: drbd9
+    - sls: drbd
     - require_in:
-      - salt: drbd9_orchestration__resources_prep
+      - salt: drbd_orchestration__resources_prep
 
-drbd9_orchestration__resources_prep:
+drbd_orchestration__resources_prep:
   salt.state:
     - tgt: {{node_ids_disk|json}}
     - tgt_type: list
     - expect_minions: True
     - saltenv: {{saltenv}}
-    - sls: drbd9.resources_prep
+    - sls: drbd.resources_prep
     - require_in:
-      - salt: drbd9_orchestration__resources_file
+      - salt: drbd_orchestration__resources_file
 
-drbd9_orchestration__resources_file:
+drbd_orchestration__resources_file:
   salt.state:
     - tgt: {{node_ids|json}}
     - tgt_type: list
     - expect_minions: True
     - saltenv: {{saltenv}}
-    - sls: drbd9.resources_file
+    - sls: drbd.resources_file
     - require_in:
-      - salt: drbd9_orchestration__resources_md
+      - salt: drbd_orchestration__resources_md
 
-drbd9_orchestration__resources_md:
+drbd_orchestration__resources_md:
   salt.state:
     - tgt: {{node_ids_disk|json}}
     - tgt_type: list
     - expect_minions: True
     - saltenv: {{saltenv}}
-    - sls: drbd9.resources_md
+    - sls: drbd.resources_md
     - require_in:
-      - salt: drbd9_orchestration__resources_up
+      - salt: drbd_orchestration__resources_up
 
-drbd9_orchestration__resources_up:
+drbd_orchestration__resources_up:
   salt.state:
     - tgt: {{node_ids_disk|json}}
     - tgt_type: list
     - expect_minions: True
     - saltenv: {{saltenv}}
-    - sls: drbd9.resources_up
+    - sls: drbd.resources_up
     - require_in:
-      - salt: drbd9_orchestration__resources_init
+      - salt: drbd_orchestration__resources_init
 
-drbd9_orchestration__resources_init:
+drbd_orchestration__resources_init:
   salt.state:
     - tgt: {{node_ids_disk|json}}
     - tgt_type: list
     - expect_minions: True
     - saltenv: {{saltenv}}
-    - sls: drbd9.resources_init
+    - sls: drbd.resources_init
     - require_in:
-      - salt: drbd9_orchestration__resources_fs
+      - salt: drbd_orchestration__resources_fs
 
-drbd9_orchestration__resources_fs:
+drbd_orchestration__resources_fs:
   salt.state:
     - tgt: {{node_ids_disk|json}}
     - tgt_type: list
     - expect_minions: True
     - saltenv: {{saltenv}}
-    - sls: drbd9.resources_fs
+    - sls: drbd.resources_fs
     - require_in:
-      - salt: drbd9_orchestration__pcs
+      - salt: drbd_orchestration__pcs
 
-drbd9_orchestration__pcs:
+drbd_orchestration__pcs:
   salt.state:
     - tgt: {{admin_node_id}}
     - expect_minions: True
     - saltenv: {{saltenv}}
-    - sls: drbd9.pcs
+    - sls: drbd.pcs

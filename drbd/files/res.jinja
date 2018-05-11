@@ -1,4 +1,4 @@
-{%- from "drbd9/map.jinja" import drbd9 with context %}
+{%- from "drbd/map.jinja" import drbd with context %}
 # Managed by salt - do not edit
 resource {{resource}} {
   net {
@@ -13,14 +13,14 @@ resource {{resource}} {
     {%- for volume, volume_data in resource_data.volumes.items()|sort %}
       {%- if node_data.get('diskless', False) %}
         {%- set disk = 'none' %}
-      {%- elif drbd9.resource_type in [ 'zvol' ] %}
-        {%- set disk =  '/dev/zvol/' + drbd9.resource_pool + '/' + resource + '_' + volume  %}
+      {%- elif drbd.resource_type in [ 'zvol' ] %}
+        {%- set disk =  '/dev/zvol/' + drbd.resource_pool + '/' + resource + '_' + volume  %}
       {%- else %}
         {%- set disk = None %}
       {%- endif %}
       {%- if volume_data.get('meta_disk', False) %}
-        {%- if drbd9.resource_type_meta in [ 'lvm' ] %}
-          {%- set meta_disk = '/dev/' + drbd9.resource_pool_meta + '/' + resource + '_' + volume + '_meta' %}
+        {%- if drbd.resource_type_meta in [ 'lvm' ] %}
+          {%- set meta_disk = '/dev/' + drbd.resource_pool_meta + '/' + resource + '_' + volume + '_meta' %}
         {%- endif %}
       {%- else %}
         {%- set meta_disk = None %}

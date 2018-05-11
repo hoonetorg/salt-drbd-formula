@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
 # vim: ft=sls
 
-{% from "drbd9/map.jinja" import drbd9 with context %}
+{% from "drbd/map.jinja" import drbd with context %}
 
-drbd9_install__pkg:
+drbd_install__pkg:
   pkg.installed:
-    - pkgs: {{ drbd9.pkgs }}
+    - pkgs: {{ drbd.pkgs }}
 
-drbd9_install__drbdmigrate:
+drbd_install__drbdmigrate:
   file.managed:
     - name: /usr/local/sbin/drbdmigrate
-    - source: salt://drbd9/files/drbdmigrate
+    - source: salt://drbd/files/drbdmigrate
     - mode: 755
     - user: root
     - group: root
 
 ### FIXME 
-#drbd9_install__drbdtop:
+#drbd_install__drbdtop:
 #curl -L -o /usr/local/sbin/drbdtop https://github.com/LINBIT/drbdtop/releases/download/v0.1/drbdtop-linux-amd64 && chmod +x /usr/local/sbin/drbdtop
