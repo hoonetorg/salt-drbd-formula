@@ -13,8 +13,8 @@
 
   {% for volume, volume_data in resource_data.volumes.items()|sort %}
 
-drbd_resources_prep__{{ resource }}_create_disk_{{ volume }}:
     {% if drbd.resource_type in [ 'zvol' ] %}
+drbd_resources_prep__{{ resource }}_create_disk_{{ volume }}:
   cmd.run:
     - name: zfs create -s -b4k -V {{volume_data.size}}MiB {{drbd.resource_pool}}/{{ resource }}_{{ volume }}
     - unless: zfs list {{drbd.resource_pool}}/{{ resource }}_{{ volume }}
@@ -31,19 +31,52 @@ drbd_resources_{{ resource }}_{{volume}}_{{volumeopt}}:
       - cmd: drbd_resources_prep__{{ resource }}_create_disk_{{ volume }}
     - require_in:
       - cmd: drbd_resources_prep__{{resource}}_{{volume}}_prep_done
-         {% endfor %}
+        {% endfor %}
       {% endif %}
+
+    {% elif drbd.resource_type in [ 'lvm' ] %}
+drbd_resources_prep__{{ resource }}_create_disk_{{ volume }}:
+  lvm.lv_present:
+    - name: {{ resource }}_{{ volume }}
+    - vgname: {{ drbd.resource_pool }}
+    - size: {{ volume_data.size }}MiB
+    - require_in:
+      - cmd: drbd_resources_prep__{{resource}}_{{volume}}_prep_done
     {% endif %}
     
     {% if volume_data.get('meta_disk', False) %}
+      # we only calculate meta size for drbd9 with 31 peers -> that is also enough for all drbd8 meta
+      {% set meta_disk_size = ( ( ( ( ( volume_data.size|int * 2048) / ( 2 ** 18 ) ) * 8 * 31 ) + 72 ) / 2048 ) %}
+      # size = ( ( ( ( {{ volume_data.size|int }}MiB * 2048 [convert MiB to sectors] ) / ( 2 ** 18 ) * 8 * 31 [max number of peers] ) + 72 ) / 2048 [convert sectors to MiB]) = {{ meta_disk_size }} |round(method='ceil')|int = {{ meta_disk_size|round(method='ceil')|int }}
+
+
+      {% if drbd.resource_type_meta in [ 'zvol' ] %}
 drbd_resources_prep__{{ resource }}_create_meta_disk_{{ volume }}:
-      {% if drbd.resource_type_meta in [ 'lvm' ] %}
-         {% set meta_disk_size = ( ( ( ( ( volume_data.size|int * 2048) / ( 2 ** 18 ) ) * 8 * 31 ) + 72 ) / 2048 ) %}
+  cmd.run:
+    - name: zfs create -s -b4k -V {{ meta_disk_size|round(method='ceil')|int }}MiB {{drbd.resource_pool_meta}}/{{ resource }}_{{ volume }}_meta
+    - unless: zfs list {{drbd.resource_pool_meta}}/{{ resource }}_{{ volume }}_meta
+    - require_in:
+      - cmd: drbd_resources_prep__{{resource}}_{{volume}}_prep_done
+
+        {% if volume_data.opts_meta is defined and volume_data.opts_meta %}
+          {% for volumeoptmeta, volumeoptmeta_data in volume_data.opts_meta.items()|sort %}
+drbd_resources_{{ resource }}_{{volume}}_meta_{{volumeoptmeta}}:
+  cmd.run:
+    - name: zfs set {{volumeoptmeta}}={{volumeoptmeta_data}} {{drbd.resource_pool_meta}}/{{ resource }}_{{ volume }}_meta
+    - unless: test "`zfs get -H -p -o value {{volumeoptmeta}} {{drbd.resource_pool_meta}}/{{ resource }}_{{ volume }}_meta`" == "{{volumeoptmeta_data}}"
+    - require:
+      - cmd: drbd_resources_prep__{{ resource }}_create_meta_disk_{{ volume }}
+    - require_in:
+      - cmd: drbd_resources_prep__{{resource}}_{{volume}}_prep_done
+          {% endfor %}
+        {% endif %}
+
+      {% elif drbd.resource_type_meta in [ 'lvm' ] %}
+drbd_resources_prep__{{ resource }}_create_meta_disk_{{ volume }}:
   lvm.lv_present:
     - name: {{ resource }}_{{ volume }}_meta
     - vgname: {{ drbd.resource_pool_meta }}
     - size: {{ meta_disk_size|round(method='ceil')|int }}MiB
-    # size = ( ( ( ( {{ volume_data.size|int }}MiB * 2048 [convert MiB to sectors] ) / ( 2 ** 18 ) * 8 * 31 [max number of peers] ) + 72 ) / 2048 [convert sectors to MiB]) = {{ meta_disk_size }} |round(method='ceil')|int = {{ meta_disk_size|round(method='ceil')|int }}
     - require_in:
       - cmd: drbd_resources_prep__{{resource}}_{{volume}}_prep_done
       {% endif %}
