@@ -10,7 +10,7 @@ drbd_install__pkg:
 drbd_install__drbdmigrate:
   file.managed:
     - name: /usr/local/sbin/drbdmigrate
-    - source: salt://drbd/files/drbdmigrate
+    - source: salt://drbd/files/drbdmigrate.{{ drbd.version }}.jinja2
     - mode: 755
     - user: root
     - group: root
