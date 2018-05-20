@@ -21,7 +21,12 @@
 drbd_resources_init__{{ resource }}_{{ volume }}_new_current_uuid:
   cmd.run:
     - name: drbdadm --verbose -- --clear-bitmap new-current-uuid  {{ resource }}/{{ volume }}
+  {% if drbd.version in [ '8' ] %}
+    - unless: drbdadm -- get-gi {{ resource }}/{{ volume }} |grep -w -v '000000000000000[0-9]:0000000000000000:0000000000000000:0000000000000000:0:0:0:1:0:1:0'
+  {% elif drbd.version in [ '9' ] %}
     - unless: drbdadm -- get-gi {{ resource }}/{{ volume }} |grep -w -v '000000000000000[0-9]:0000000000000000:0000000000000000:0000000000000000:0:0:0:0:0:0:0:1:1:0:0:1'
+  {% endif %}
+
 
 drbd_resources_init__{{ resource }}_{{ volume }}_set_grain_successful:
   grains.present:

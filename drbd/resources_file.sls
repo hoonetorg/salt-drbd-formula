@@ -19,13 +19,6 @@ drbd_resources_file__{{ resource }}_resfile:
     - user: root
     - group: root
     - require_in:
-      - cmd: drbd_resources_file__{{resource}}_file_done
-
-drbd_resources_file__{{resource}}_file_done:
-  cmd.run:
-    - name: true
-    - unless: true
-    - require_in:
       - cmd: drbd_resources_file__file_done
 
 {% endfor %}

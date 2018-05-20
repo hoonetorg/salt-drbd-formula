@@ -12,7 +12,12 @@
 
 drbd_resources_md__{{ resource }}_{{ volume }}_create_md:
   cmd.run:
+  #{{drbd.version}}
+  {% if drbd.version in [ '8' ] %}
+    - name: drbdadm --verbose -- --force create-md {{ resource }}/{{ volume }}
+  {% elif drbd.version in [ '9' ] %}
     - name: drbdadm --verbose --max-peers=31 -- --force create-md {{ resource }}/{{ volume }}
+  {% endif %}
     - unless: drbdadm --verbose -- dstate {{ resource }}/{{ volume }}
     - require_in:
       - cmd: drbd_resources_md__md_done

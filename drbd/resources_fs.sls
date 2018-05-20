@@ -19,10 +19,24 @@
 # resource={{resource}}, volume={{volume}}, initfs_done={{ initfs_done }}
         {% if not initfs_done %}
 
+          {% if drbd.version in [ '8' ] %}
+drbd_resources_fs__{{ resource }}_{{ volume }}_primary:
+  cmd.run:
+    - name: drbdadm primary {{ resource }}/{{ volume }}
+    - onlyif: test -b /dev/drbd/by-res/{{ resource }}/{{ volume }} && test -w /dev/drbd/by-res/{{ resource }}/{{ volume }} && drbdadm role {{ resource }}|grep -w "Secondary/Secondary"
+    - require_in:
+      - cmd: drbd_resources_fs__{{ resource }}_{{ volume }}_create_fs
+      - grains: drbd_resources_fs__{{ resource }}_{{ volume }}_set_grain_successful
+          {% endif %}
+
 drbd_resources_fs__{{ resource }}_{{ volume }}_create_fs:
   cmd.run:
     - name: blkid -c /dev/null -o value -s TYPE /dev/drbd/by-res/{{ resource }}/{{ volume }} || mkfs.{{volume_data.fstype}} {% if volume_data.mkfsopts is defined and volume_data.mkfsopts %} {{volume_data.mkfsopts}} {% endif %} /dev/drbd/by-res/{{ resource }}/{{ volume }} && sync && udevadm settle && blkid -c /dev/null -o value -s TYPE /dev/drbd/by-res/{{ resource }}/{{ volume }} | grep -w {{volume_data.fstype}}
+          {% if drbd.version in [ '8' ] %}
+    - onlyif: test -b /dev/drbd/by-res/{{ resource }}/{{ volume }} && test -w /dev/drbd/by-res/{{ resource }}/{{ volume }} && drbdadm role {{ resource }}|grep -w "Primary/Secondary"
+          {% elif drbd.version in [ '9' ] %}
     - onlyif: test -b /dev/drbd/by-res/{{ resource }}/{{ volume }} && test -w /dev/drbd/by-res/{{ resource }}/{{ volume }} && drbdadm role {{ resource }}|grep -w Secondary
+          {% endif %}
     - unless: '! dd if=/dev/drbd/by-res/{{ resource }}/{{ volume }} of=/dev/null bs=1 count=1 ||  blkid -c /dev/null -o value -s TYPE /dev/drbd/by-res/{{ resource }}/{{ volume }}|grep -w {{volume_data.fstype}}'
     - require_in:
       - grains: drbd_resources_fs__{{ resource }}_{{ volume }}_set_grain_successful
@@ -39,7 +53,11 @@ drbd_resources_fs__{{ resource }}_{{ volume }}_mount:
     - match_on:
       - name
       - device
+          {% if drbd.version in [ '8' ] %}
+    - onlyif: test -b /dev/drbd/by-res/{{ resource }}/{{ volume }} && test -w /dev/drbd/by-res/{{ resource }}/{{ volume }} && drbdadm role {{ resource }}|grep -w "Primary/Secondary" && dd if=/dev/drbd/by-res/{{ resource }}/{{ volume }} of=/dev/null bs=1 count=1 && test -z "`(mount |grep -w /dev/drbd/by-res/{{ resource }}/{{ volume }} || mount |grep -w $(drbdadm sh-dev {{ resource }}/{{ volume }}) )`"
+          {% elif drbd.version in [ '9' ] %}
     - onlyif: test -b /dev/drbd/by-res/{{ resource }}/{{ volume }} && test -w /dev/drbd/by-res/{{ resource }}/{{ volume }} && drbdadm role {{ resource }}|grep -w Secondary && dd if=/dev/drbd/by-res/{{ resource }}/{{ volume }} of=/dev/null bs=1 count=1 && test -z "`(mount |grep -w /dev/drbd/by-res/{{ resource }}/{{ volume }} || mount |grep -w $(drbdadm sh-dev {{ resource }}/{{ volume }}) )`"
+          {% endif %}
     - require:
       - cmd: drbd_resources_fs__{{ resource }}_{{ volume }}_create_fs
     - require_in:
@@ -68,6 +86,17 @@ drbd_resources_fs__{{ resource }}_{{ volume }}_umount:
     - require:
       - cmd: drbd_resources_fs__{{ resource }}_{{ volume }}_create_fs
       - mount: drbd_resources_fs__{{ resource }}_{{ volume }}_mount
+    - require_in:
+      - grains: drbd_resources_fs__{{ resource }}_{{ volume }}_set_grain_successful
+          {% endif %}
+
+          {% if drbd.version in [ '8' ] %}
+drbd_resources_fs__{{ resource }}_{{ volume }}_secondary:
+  cmd.run:
+    - name: drbdadm secondary {{ resource }}/{{ volume }}
+    #- onlyif: test -b /dev/drbd/by-res/{{ resource }}/{{ volume }} && test -w /dev/drbd/by-res/{{ resource }}/{{ volume }} && drbdadm role {{ resource }}|grep -w "Primary/Secondary"
+    - require:
+      - mount: drbd_resources_fs__{{ resource }}_{{ volume }}_umount
     - require_in:
       - grains: drbd_resources_fs__{{ resource }}_{{ volume }}_set_grain_successful
           {% endif %}

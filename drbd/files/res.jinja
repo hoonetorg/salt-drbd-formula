@@ -8,37 +8,49 @@ resource {{resource}} {
   }
   {%- for node, node_data in resource_data.get('nodes', {}).items()|sort %}
   on {{ node }} {
+    {% if drbd.version in [ '9' ] %}
     node-id     {{ node_data.get('id') }};
+     {%- endif %}
     address     ipv4 {{ node_data.get('ipv4') }}:{{ resource_data.get('port') }};
     {%- for volume, volume_data in resource_data.volumes.items()|sort %}
       {%- if node_data.get('diskless', False) %}
         {%- set disk = 'none' %}
       {%- elif drbd.resource_type in [ 'zvol' ] %}
-        {%- set disk =  '/dev/zvol/' + drbd.resource_pool + '/' + resource + '_' + volume  %}
+        {%- set disk = '/dev/zvol/' + drbd.resource_pool + '/' + resource + '_' + volume  %}
+      {%- elif drbd.resource_type in [ 'lvm' ] %}
+        {%- set disk =      '/dev/' + drbd.resource_pool + '/' + resource + '_' + volume %}
+      {%- elif drbd.resource_type in [ 'block' ] %}
+        {%- set disk = volume_data.block %}
       {%- else %}
         {%- set disk = None %}
       {%- endif %}
       {%- if volume_data.get('meta_disk', False) %}
-        {%- if drbd.resource_type_meta in [ 'lvm' ] %}
-          {%- set meta_disk = '/dev/' + drbd.resource_pool_meta + '/' + resource + '_' + volume + '_meta' %}
+        {%- if drbd.resource_type_meta in [ 'zvol' ] %}
+          {%- set meta_disk = '/dev/zvol/' + drbd.resource_pool_meta + '/' + resource + '_' + volume + '_meta' %}
+        {%- elif drbd.resource_type_meta in [ 'lvm' ] %}
+          {%- set meta_disk =      '/dev/' + drbd.resource_pool_meta + '/' + resource + '_' + volume + '_meta' %}
+        {%- elif drbd.resource_type_meta in [ 'block' ] %}
+          {%- set meta_disk = volume_data.block_meta %}
         {%- endif %}
       {%- else %}
         {%- set meta_disk = None %}
       {%- endif %}
     volume {{ volume }} {
       device      minor {{ volume_data.get('minor') }};
-      disk        {{ disk }};
+      disk        "{{ disk }}";
       {%- if not node_data.get('diskless', False) %}
-      meta-disk   {{ meta_disk|default('internal') }};
+      meta-disk   "{{ meta_disk|default('internal') }}";
       {%- endif %}
     }
     {%- endfor %}
   }
   {%- endfor %}
+  {% if drbd.version in [ '9' ] %}
   connection-mesh {
     hosts {{ resource_data.get('nodes', {}).keys()|join(' ') }};
     net {
       protocol {{ resource_data.get('net_options', {}).get('protocol', 'C') }};
     }
   }
+  {% endif %}
 }
