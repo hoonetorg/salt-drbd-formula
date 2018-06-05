@@ -53,26 +53,26 @@ base:
         # only available on 9.x
         #  quorum: 'majority'
 
-        disk:
-          #tuning recommendation for 8
-          al-extents: '3387'
-          #tuning recommendation for 9
-          #al-extents: '6007'
+        #disk:
+        #  #tuning recommendation for 8
+        #  #al-extents: '3389'
+        #  #tuning recommendation for 9
+        #  #al-extents: '6007'
 
         net:
-          verify-alg: 'sha1'
-          csums-alg: 'sha1'
+          verify-alg: 'sha256'
+          csums-alg: 'sha256'
 
-          max-buffers: '1024'
-          max-epoch-size: '160'
+          #max-buffers: '1024'
+          #max-epoch-size: '160'
           #FIXME try out
           #some controllers perform best, when kicked
           #unplug-watermark: '16'
           #some controllers perform best, when left alone, make unplug-watermark = max-buffers
-          unplug-watermark: '1024'
+          #unplug-watermark: '1024'
 
-          sndbuf-size: '2048k'
-          rcvbuf-size: '2048k'
+          #sndbuf-size: '2048k'
+          #rcvbuf-size: '2048k'
 
 default:
   sysconfdir: /etc/sysconfig
