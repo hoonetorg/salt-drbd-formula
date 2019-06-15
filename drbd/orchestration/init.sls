@@ -17,15 +17,25 @@
 # node_ids_disk: {{node_ids_disk|json}}
 # node_ids_diskless: {{node_ids_diskless|json}}
 
+#salt-run cache.clear_all tgt="{{node_ids|join(',')}}" tgt_type="list"
+drbd_orchestration__clear_all:
+  salt.runner:
+    - name: cache.clear_all
+    - tgt: {{node_ids|json}}
+    - tgt_type: list
+    - require_in:
+      - salt: drbd_orchestration__sync_all
 
-drbd_orchestration__clean_cache:
-  cmd.run:
-    - name: |
+#salt -L '{{node_ids|join(',')}}' saltutil.sync_all
+drbd_orchestration__sync_all:
+  salt.function:
+    - name: saltutil.sync_all
+    - tgt: {{node_ids|json}}
+    - tgt_type: list
+    - require_in:
+      - salt: drbd_orchestration__install
 
-        salt-run cache.clear_all tgt='*' && \
-        salt '*' saltutil.sync_all && \
-        echo
-        #rm /var/cache/salt/master/minions/*/*
+#FIXME: rm /var/cache/salt/master/minions/*/*
 
 drbd_orchestration__install:
   salt.state:

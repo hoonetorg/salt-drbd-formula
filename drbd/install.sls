@@ -5,7 +5,7 @@
 
 drbd_install__pkg:
   pkg.installed:
-    - pkgs: {{ drbd.pkgs }}
+    - pkgs: {{ drbd.pkgs | tojson }}
 
 drbd_install__drbdmigrate:
   file.managed:
