@@ -84,8 +84,8 @@ drbd_resources_prep__{{ resource }}_create_meta_disk_{{ volume }}:
 
 drbd_resources_prep__{{resource}}_{{volume}}_prep_done:
   cmd.run:
-    - name: true
-    - unless: true
+    - name: "true"
+    - unless: "true"
     - require_in:
       - cmd: drbd_resources_prep__prep_done
 
@@ -94,5 +94,5 @@ drbd_resources_prep__{{resource}}_{{volume}}_prep_done:
 
 drbd_resources_prep__prep_done:
   cmd.run:
-    - name: true
-    - unless: true
+    - name: "true"
+    - unless: "true"

@@ -27,5 +27,5 @@ drbd_resources_md__{{ resource }}_{{ volume }}_create_md:
 
 drbd_resources_md__md_done:
   cmd.run:
-    - name: true
-    - unless: true
+    - name: "true"
+    - unless: "true"

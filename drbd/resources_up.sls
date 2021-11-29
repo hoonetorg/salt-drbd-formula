@@ -78,5 +78,5 @@ drbd_resources_up__{{ resource }}_{{ volume }}_set_grain_fs_successful:
 
 drbd_resources_up__empty_sls_prevent_error:
   cmd.run:
-    - name: true
-    - unless: true
+    - name: "true"
+    - unless: "true"

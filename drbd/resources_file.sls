@@ -25,5 +25,5 @@ drbd_resources_file__{{ resource }}_resfile:
 
 drbd_resources_file__file_done:
   cmd.run:
-    - name: true
-    - unless: true
+    - name: "true"
+    - unless: "true"
